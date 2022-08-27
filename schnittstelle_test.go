@@ -29,6 +29,19 @@ func TestExtract(t *testing.T) {
 	compare(t, expected, results)
 }
 
+// See Issue #1
+func TestExtractRootPathNotExists(t *testing.T) {
+	_, err := Extract("Example", "not_exists", 5)
+	if err == nil {
+		t.Fatal("path error not returned")
+	}
+
+	_, err = Extract("Example", "go.mod", 5)
+	if err != ErrPathIsFile {
+		t.Fatal("wrong error returned:", err)
+	}
+}
+
 // --- helpers ---
 
 func compare(t *testing.T, expected, results []string) {

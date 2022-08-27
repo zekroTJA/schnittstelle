@@ -15,6 +15,10 @@ import (
 	"unicode"
 )
 
+var (
+	ErrPathIsFile = errors.New("root path is not a directory")
+)
+
 // Extract walks through all files recursively starting from
 // codePath creating an index of Go source files which are
 // no unit test files.
@@ -33,7 +37,15 @@ import (
 func Extract(structName string, codePath string, poolSize int) ([]string, error) {
 	index := make([]string, 0, 100)
 
-	err := filepath.WalkDir(codePath,
+	stat, err := os.Stat(codePath)
+	if err != nil {
+		return nil, err
+	}
+	if !stat.IsDir() {
+		return nil, ErrPathIsFile
+	}
+
+	err = filepath.WalkDir(codePath,
 		func(path string, d fs.DirEntry, err error) error {
 			if d.IsDir() {
 				return nil
