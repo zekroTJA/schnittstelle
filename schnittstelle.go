@@ -207,13 +207,28 @@ func FindMethodsInFile(filePath string, structName string) ([]string, error) {
 // Assemble takes an array of method signatures and builds
 // an interface with the defined interfaceName and writes it
 // to w. If a packageName is specified, the package header
-// with the given package name is added to the output.
-func Assemble(interfaceName, packageName string, signatures []string, w io.Writer) (err error) {
+// with the given package name is added to the output. When
+// inject is specified, the contets will be added to the
+// output in between the package statement and the interface
+// injection.
+func Assemble(
+	interfaceName string,
+	packageName string,
+	inject string,
+	signatures []string,
+	w io.Writer,
+) (err error) {
 	if packageName != "" {
 		_, err = fmt.Fprintf(w, "package %s\n\n", packageName)
 		if err != nil {
 			return err
 		}
+	}
+
+	if inject != "" {
+		inject = strings.ReplaceAll(inject, "\\n", "\n")
+		inject = strings.ReplaceAll(inject, "\\t", "\t")
+		fmt.Fprintf(w, "%s\n\n", inject)
 	}
 
 	_, err = fmt.Fprintf(w, "type %s interface {\n", interfaceName)

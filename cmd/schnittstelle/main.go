@@ -19,6 +19,7 @@ var (
 	fPackage = flag.String("package", "", "Package name ingested in output")
 	fOut     = flag.String("out", "",
 		"Output file (if not specified, output will be piped to Stdout)")
+	fInject   = flag.String("inject", "", "Inject code into the output code.")
 	fPoolSize = flag.Uint("pool", 10,
 		"Number of files which can be searched through simultaneously")
 )
@@ -71,7 +72,9 @@ func main() {
 		defer output.Close()
 	}
 
-	err = schnittstelle.Assemble(interfaceName, *fPackage, signatures, output)
+	err = schnittstelle.Assemble(
+		interfaceName, *fPackage, *fInject,
+		signatures, output)
 	if err != nil {
 		fmt.Println("Error: Assembling output:", err.Error())
 		return
