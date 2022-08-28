@@ -1,6 +1,7 @@
 [VERSION]
 
-Initial release.
+- Fix import injection formatting.
+- Add flag `-f` / `--format` to format output using Gofmt.
 
 # Update
 
