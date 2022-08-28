@@ -1,7 +1,9 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
+	"go/format"
 	"io"
 	"os"
 	"path/filepath"
@@ -20,6 +22,7 @@ type Args struct {
 	Inject    []string `arg:"--inject,separate" help:"Inject code lines into the output code."`
 	Imports   []string `arg:"--import,separate" help:"Add import lines to the output."`
 	PoolSize  uint     `arg:"--pool" help:"Number of files which can be searched through simultaneously" default:"5"`
+	Format    bool     `arg:"-f,--format" help:"Format output using Gofmt."`
 }
 
 func main() {
@@ -76,11 +79,27 @@ func main() {
 		inject = append(inject, args.Inject...)
 	}
 
+	var buff bytes.Buffer
 	err = schnittstelle.Assemble(
 		interfaceName, args.Package, inject,
-		signatures, output)
+		signatures, &buff)
 	if err != nil {
 		fmt.Println("Error: Assembling output:", err.Error())
+		return
+	}
+
+	outData := buff.Bytes()
+	if args.Format {
+		outData, err = format.Source(outData)
+		if err != nil {
+			fmt.Println("Error: Formatting output:", err.Error())
+			return
+		}
+	}
+
+	_, err = output.Write(outData)
+	if err != nil {
+		fmt.Println("Error: Writing output:", err.Error())
 		return
 	}
 }
@@ -90,7 +109,7 @@ func formatImport(v string) string {
 
 	var prefix, pack string
 	if len(split) == 2 {
-		prefix = split[0]
+		prefix = split[0] + " "
 		pack = split[1]
 	} else {
 		pack = split[0]
@@ -100,5 +119,5 @@ func formatImport(v string) string {
 		pack = `"` + pack + `"`
 	}
 
-	return prefix + " " + pack
+	return prefix + pack
 }
