@@ -18,6 +18,7 @@ type Args struct {
 	Package   string   `arg:"-p,--package" help:"Package name ingested in output"`
 	Out       string   `arg:"-o,--out" help:"Output file (if not specified, output will be piped to Stdout)"`
 	Inject    []string `arg:"--inject,separate" help:"Inject code lines into the output code."`
+	Imports   []string `arg:"--import,separate" help:"Add import lines to the output."`
 	PoolSize  uint     `arg:"--pool" help:"Number of files which can be searched through simultaneously" default:"5"`
 }
 
@@ -63,11 +64,41 @@ func main() {
 		defer output.Close()
 	}
 
+	inject := args.Inject
+	if len(args.Imports) != 0 {
+		inject = make([]string, 0, len(args.Inject)+len(args.Imports)+2)
+		inject = append(inject, "import (")
+		for _, imp := range args.Imports {
+			inject = append(inject, fmt.Sprintf("\t%s",
+				formatImport(imp)))
+		}
+		inject = append(inject, ")")
+		inject = append(inject, args.Inject...)
+	}
+
 	err = schnittstelle.Assemble(
-		interfaceName, args.Package, args.Inject,
+		interfaceName, args.Package, inject,
 		signatures, output)
 	if err != nil {
 		fmt.Println("Error: Assembling output:", err.Error())
 		return
 	}
+}
+
+func formatImport(v string) string {
+	split := strings.SplitN(v, " ", 2)
+
+	var prefix, pack string
+	if len(split) == 2 {
+		prefix = split[0]
+		pack = split[1]
+	} else {
+		pack = split[0]
+	}
+
+	if pack[0] != '"' && pack[len(pack)-1] != '"' {
+		pack = `"` + pack + `"`
+	}
+
+	return prefix + " " + pack
 }
