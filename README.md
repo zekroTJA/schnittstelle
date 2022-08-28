@@ -17,7 +17,8 @@ Alternatively, you can simply download latest binaries from the
 ## Usage
 
 ```
-Usage: schnittstelle --struct STRUCT [--root ROOT] [--interface INTERFACE] [--package PACKAGE] [--out OUT] [--inject INJECT] [--import IMPORT] [--pool POOL]
+Usage: schnittstelle --struct STRUCT [--root ROOT] [--interface INTERFACE] [--package PACKAGE] 
+  [--out OUT] [--inject INJECT] [--import IMPORT] [--pool POOL] [--format]
 
 Options:
   --struct STRUCT, -s STRUCT
@@ -31,5 +32,6 @@ Options:
   --inject INJECT        Inject code lines into the output code.
   --import IMPORT        Add import lines to the output.
   --pool POOL            Number of files which can be searched through simultaneously [default: 5]
+  --format, -f           Format output using Gofmt.
   --help, -h             display this help and exit
 ```
