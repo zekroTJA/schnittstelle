@@ -1,53 +1,44 @@
 package main
 
 import (
-	"flag"
 	"fmt"
 	"io"
 	"os"
 	"path/filepath"
 	"strings"
 
+	"github.com/alexflint/go-arg"
 	"github.com/zekrotja/schnittstelle"
 )
 
-var (
-	fStructName = flag.String("struct", "", "Name of the struct")
-	fRoot       = flag.String("root", ".", "Root directory")
-	fInterface  = flag.String("interface", "",
-		"The name of the result interface (name of struct when not specified)")
-	fPackage = flag.String("package", "", "Package name ingested in output")
-	fOut     = flag.String("out", "",
-		"Output file (if not specified, output will be piped to Stdout)")
-	fInject   = flag.String("inject", "", "Inject code into the output code.")
-	fPoolSize = flag.Uint("pool", 10,
-		"Number of files which can be searched through simultaneously")
-)
+type Args struct {
+	Struct    string   `arg:"-s,--struct,required" help:"Name of the struct"`
+	Root      string   `arg:"-r,--root" help:"Root directory" default:"."`
+	Interface string   `arg:"-i,--interface" help:"The name of the result interface (name of struct when not specified)"`
+	Package   string   `arg:"-p,--package" help:"Package name ingested in output"`
+	Out       string   `arg:"-o,--out" help:"Output file (if not specified, output will be piped to Stdout)"`
+	Inject    []string `arg:"--inject,separate" help:"Inject code lines into the output code."`
+	PoolSize  uint     `arg:"--pool" help:"Number of files which can be searched through simultaneously" default:"5"`
+}
 
 func main() {
-	flag.Parse()
+	var args Args
+	arg.MustParse(&args)
 
-	structName := *fStructName
-
-	if structName == "" {
-		fmt.Println("Error: struct name must be given")
-		return
-	}
-
-	interfaceName := *fInterface
+	interfaceName := args.Interface
 	if interfaceName == "" {
-		interfaceName = structName
+		interfaceName = args.Struct
 	}
 
 	signatures, err := schnittstelle.Extract(
-		structName, *fRoot, int(*fPoolSize))
+		args.Struct, args.Root, int(args.PoolSize))
 	if err != nil {
 		fmt.Println("Error: Extracting signatures:", err.Error())
 		return
 	}
 
 	var output io.WriteCloser = os.Stdout
-	outFile := *fOut
+	outFile := args.Out
 	if outFile != "" {
 		if !strings.HasSuffix(outFile, ".go") {
 			outFile += ".go"
@@ -73,7 +64,7 @@ func main() {
 	}
 
 	err = schnittstelle.Assemble(
-		interfaceName, *fPackage, *fInject,
+		interfaceName, args.Package, args.Inject,
 		signatures, output)
 	if err != nil {
 		fmt.Println("Error: Assembling output:", err.Error())

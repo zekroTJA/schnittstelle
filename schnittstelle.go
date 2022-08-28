@@ -214,7 +214,7 @@ func FindMethodsInFile(filePath string, structName string) ([]string, error) {
 func Assemble(
 	interfaceName string,
 	packageName string,
-	inject string,
+	inject []string,
 	signatures []string,
 	w io.Writer,
 ) (err error) {
@@ -225,10 +225,13 @@ func Assemble(
 		}
 	}
 
-	if inject != "" {
-		inject = strings.ReplaceAll(inject, "\\n", "\n")
-		inject = strings.ReplaceAll(inject, "\\t", "\t")
-		fmt.Fprintf(w, "%s\n\n", inject)
+	if len(inject) != 0 {
+		for _, i := range inject {
+			i = strings.ReplaceAll(i, "\\n", "\n")
+			i = strings.ReplaceAll(i, "\\t", "\t")
+			fmt.Fprintf(w, "%s\n", i)
+		}
+		fmt.Fprint(w, "\n")
 	}
 
 	_, err = fmt.Fprintf(w, "type %s interface {\n", interfaceName)
